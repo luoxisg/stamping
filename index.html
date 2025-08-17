@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>皮革追溯与自动化集成系统：交互式技术仪表板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Tech Neutral (Cool Grays, Deep Blue, Green Accent) -->
+    <!-- Application Structure Plan: A top-down, decision-focused dashboard designed for a technical audience. It begins with a high-level summary and presents the four modular options as prominent KPI cards for immediate comparison. The core of the application is a tabbed interface allowing users to toggle between a visual Process Flow, a deep Technical Analysis section (with its own sub-tabs for different technologies), and a detailed Financial Breakdown with an interactive chart. This structure allows a user to quickly grasp the options, then dive into the specific area of interest—be it the engineering principles, the process changes, or the economic justification—without linear scrolling. An implementation and risk section concludes the report. This user flow respects the expertise of the audience by providing direct access to complex information in a structured, non-linear way. -->
+    <!-- Visualization & Content Choices: Report Info: Four Options -> Goal: Compare -> Viz: KPI Cards -> Interaction: Hover effect -> Justification: Provides an immediate, high-level overview of the investment tiers. Report Info: Process Flow -> Goal: Organize -> Viz: Numbered step diagram -> Interaction: Static visual with highlights -> Justification: Clearly outlines the end-to-end process and how different options affect it. Method: HTML/CSS. Report Info: Technical Principles (Stamping, Robotics, Vision) -> Goal: Educate/Justify -> Viz: Tabbed content panes with comparison tables and diagrams -> Interaction: User clicks to reveal detailed technical explanations -> Justification: Makes dense, academic-level information digestible and accessible on demand, preventing UI clutter. Method: HTML/JS. Report Info: Financial Data -> Goal: Analyze -> Viz: Bar Chart -> Interaction: Buttons to update chart view for each option -> Justification: Allows for direct visual comparison of the cost composition of each investment option. Library: Chart.js. Report Info: Implementation Plan -> Goal: Inform -> Viz: Vertical Timeline -> Interaction: Static visual -> Justification: Clearly presents project phases and key milestones. Method: HTML/CSS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Roboto', 'Noto Sans SC', sans-serif; background-color: #f8f9fa; color: #343a40; }
+        .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 350px; max-height: 450px; }
+        @media (min-width: 768px) { .chart-container { height: 400px; } }
+        .nav-link { transition: color 0.3s, border-bottom-color 0.3s; border-bottom: 2px solid transparent; padding-bottom: 4px; }
+        .nav-link:hover, .nav-link.active { color: #059669; border-bottom-color: #059669; }
+        .tab-button { transition: background-color 0.3s, color 0.3s, border-color 0.3s; border-bottom: 3px solid transparent; }
+        .tab-button.active { color: #1e3a8a; border-color: #1e3a8a; font-weight: 600; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        .kpi-card { transition: transform 0.3s, box-shadow 0.3s; border: 1px solid #e5e7eb; }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+        .timeline-item::before { content: ''; position: absolute; left: -11px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border-radius: 50%; background-color: #1e3a8a; border: 4px solid #f8f9fa; }
+        .lang-switch-btn.active { background-color: #1e3a8a; color: white; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-lg md:text-2xl font-bold text-gray-800">
+                <span class="text-[#1e3a8a]"><span data-lang="zh">皮革追溯</span><span data-lang="en" class="hidden">Leather Traceability</span></span><span class="font-light"><span data-lang="zh">与自动化集成系统</span><span data-lang="en" class="hidden"> & Automation Integration System</span></span>
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#summary" class="nav-link"><span data-lang="zh">方案摘要</span><span data-lang="en" class="hidden">Summary</span></a>
+                <a href="#details" class="nav-link"><span data-lang="zh">方案详情</span><span data-lang="en" class="hidden">Details</span></a>
+                <a href="#financials" class="nav-link"><span data-lang="zh">财务分析</span><span data-lang="en" class="hidden">Financials</span></a>
+                <a href="#implementation" class="nav-link"><span data-lang="zh">实施策略</span><span data-lang="en" class="hidden">Implementation</span></a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <section id="summary" class="text-center py-12 md:py-16">
+            <h1 class="text-3xl md:text-4xl font-bold text-[#1e3a8a] mb-4"><span data-lang="zh">技术与经济尽职调查报告</span><span data-lang="en" class="hidden">Technical & Economic Due Diligence Report</span></h1>
+            <p class="text-base md:text-lg text-gray-600 max-w-4xl mx-auto mb-12"><span data-lang="zh">本报告对皮革件级追溯与自动化集成系统方案进行深入的技术可行性与经济合理性尽职调查，提供四种模块化选项以实现分阶段的智能化升级。</span><span data--lang="en" class="hidden">This report provides an in-depth technical and economic due diligence for the item-level leather traceability and automation integration system, offering four modular options for phased intelligent upgrading.</span></p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                <div class="bg-white p-6 rounded-lg kpi-card">
+                    <h3 class="text-lg font-semibold text-gray-500 mb-2"><span data-lang="zh">选项一：核心追溯</span><span data-lang="en" class="hidden">Option 1: Core Traceability</span></h3>
+                    <p class="text-4xl font-bold text-[#1e3a8a]">$11,600</p>
+                    <p class="text-gray-500 mt-2 text-sm"><span data-lang="zh">建立追溯基础</span><span data-lang="en" class="hidden">Establish Traceability Foundation</span></p>
+                </div>
+                <div class="bg-white p-6 rounded-lg kpi-card">
+                    <h3 class="text-lg font-semibold text-gray-500 mb-2"><span data-lang="zh">选项二：增加自动堆叠</span><span data-lang="en" class="hidden">Option 2: Add Auto Stacking</span></h3>
+                    <p class="text-4xl font-bold text-[#1e3a8a]">$107,600</p>
+                    <p class="text-gray-500 mt-2 text-sm">ROI: ~1.4 <span data-lang="zh">年</span><span data-lang="en" class="hidden">Years</span></p>
+                </div>
+                <div class="bg-white p-6 rounded-lg kpi-card">
+                    <h3 class="text-lg font-semibold text-gray-500 mb-2"><span data-lang="zh">选项三：增加自动上料</span><span data-lang="en" class="hidden">Option 3: Add Auto Loading</span></h3>
+                    <p class="text-4xl font-bold text-[#1e3a8a]">$31,600</p>
+                    <p class="text-gray-500 mt-2 text-sm"><span data-lang="zh">提升数据准确性</span><span data-lang="en" class="hidden">Improve Data Accuracy</span></p>
+                </div>
+                <div class="bg-white p-6 rounded-lg kpi-card">
+                    <h3 class="text-lg font-semibold text-gray-500 mb-2"><span data-lang="zh">选项四：全自动方案</span><span data-lang="en" class="hidden">Option 4: Full Automation</span></h3>
+                    <p class="text-4xl font-bold text-[#1e3a8a]">$132,600</p>
+                    <p class="text-gray-500 mt-2 text-sm">ROI: ~1.8 <span data-lang="zh">年</span><span data-lang="en" class="hidden">Years</span></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="details" class="py-12 md:py-16">
+            <div class="max-w-7xl mx-auto bg-white rounded-lg card-shadow p-6 md:p-8">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                        <button id="tab-btn-tech" class="tab-button active py-4 px-1 text-base"><span data-lang="zh">核心技术深度解析</span><span data-lang="en" class="hidden">Core Technology Deep Dive</span></button>
+                        <button id="tab-btn-modules" class="tab-button py-4 px-1 text-base"><span data-lang="zh">模块化子系统分析</span><span data-lang="en" class="hidden">Modular Subsystem Analysis</span></button>
+                    </nav>
+                </div>
+                <div id="tab-content-tech" class="py-8">
+                    <h3 class="text-2xl font-bold mb-6"><span data-lang="zh">烫印模块：针对非均质材料的机电一体化解决方案</span><span data-lang="en" class="hidden">Stamping Module: A Mechatronic Solution for Inhomogeneous Materials</span></h3>
+                    <div class="space-y-6 text-base">
+                        <p><strong class="text-gray-900"><span data-lang="zh">核心挑战 (非均质性与各向异性):</span><span data-lang="en" class="hidden">Core Challenge (Inhomogeneity & Anisotropy):</span></strong><span data-lang="zh"> 皮革作为生物材料，其厚度、纤维密度和压缩弹性模量在不同区域存在显著差异。传统“自上而下”刚性压头无法施加均匀压力，导致压印效果不一致。</span><span data-lang="en" class="hidden"> As a biological material, leather exhibits significant variations in thickness, fiber density, and compressive modulus. Traditional top-down rigid stamps cannot apply uniform pressure, leading to inconsistent impressions.</span></p>
+                        <p><strong class="text-gray-900"><span data-lang="zh">创新结构力学 (自下而上压印):</span><span data-lang="en" class="hidden">Innovative Mechanics (Bottom-up Stamping):</span></strong><span data-lang="zh"> 本方案颠覆了传统作用力模型。输送带下方的压印模块成为主动施力源，而上方的“顺应性背托”(Compliant Backer)则成为一个智能的、可适应的反作用力基准平面。柔性背托根据皮革厚度产生微小形变，动态地将反作用力均匀分配，确保压痕深度高度一致。</span><span data-lang="en" class="hidden"> This design inverts the traditional force model. The module below the conveyor is the active force source, while a "Compliant Backer" above acts as an adaptive reaction plane. The backer deforms based on leather thickness, dynamically distributing reaction force to ensure consistent stamping depth.</span></p>
+                        <p><strong class="text-gray-900"><span data-lang="zh">精密控制 (热力学与流体动力学):</span><span data-lang="en" class="hidden">Precision Control (Thermodynamics & Fluid Dynamics):</span></strong><span data-lang="zh"> 通过PID算法将压印头温度波动控制在±2°C内；通过电气比例阀和电磁阀对气缸输出力(1-3 kN)和保压时间进行毫秒级精确控制。</span><span data-lang="en" class="hidden"> A PID algorithm maintains stamp temperature within ±2°C. Proportional and solenoid valves provide millisecond-level control over cylinder force (1-3 kN) and dwell time.</span></p>
+                        <p><strong class="text-gray-900"><span data-lang="zh">数字打码模块 (光聚合):</span><span data-lang="en" class="hidden">Digital Marking Module (Photopolymerization):</span></strong><span data-lang="zh"> 采用UV喷墨打印二维码，本质是一个光聚合(Photopolymerization)过程。压电式喷头喷射UV墨水，高强度LED-UV灯使其瞬间固化，形成耐磨、非接触式的标识。</span><span data-lang="en" class="hidden"> UV inkjet printing is a photopolymerization process. A piezoelectric printhead jets UV ink, which is instantly cured by a high-intensity LED-UV lamp, forming a durable, non-contact mark.</span></p>
+                    </div>
+                </div>
+                <div id="tab-content-modules" class="py-8 hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <h4 class="text-xl font-bold mb-3"><span data-lang="zh">堆叠单元 (选项二)</span><span data-lang="en" class="hidden">Stacking Unit (Option 2)</span></h4>
+                            <p class="text-base"><strong class="text-gray-900"><span data-lang="zh">运动学分析:</span><span data-lang="en" class="hidden">Kinematic Analysis:</span></strong><span data-lang="zh"> 堆叠是笛卡尔坐标问题，3轴龙门机器人原生线性运动比6轴关节臂更高效、控制更简单。</span><span data-lang="en" class="hidden"> Stacking is a Cartesian problem; a 3-axis gantry robot's native linear motion is more efficient and simpler to control than a 6-axis articulated arm.</span><br><strong class="text-gray-900">EOAT:</strong><span data-lang="zh"> “泡沫真空夹具”能贴合皮革表面，封闭孔隙，形成稳定负压区，解决传统吸盘漏气问题。</span><span data-lang="en" class="hidden"> A "foam vacuum gripper" conforms to the leather surface, sealing pores to create a stable negative pressure zone, solving traditional suction cup leakage issues.</span></p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-3"><span data-lang="zh">上料单元 (选项三)</span><span data-lang="en" class="hidden">Loading Unit (Option 3)</span></h4>
+                            <p class="text-base"><span data-lang="zh">核心是建立“数字线索”(Digital Thread)。工业级扫描器自动读取前段工序条码，通过工业以太网将数据传递给主PLC，消除人工录入错误，确保追溯链从源头开始的完整性。</span><span data-lang="en" class="hidden">The core is establishing a "Digital Thread." An industrial scanner reads barcodes from the previous process, transmitting data to the main PLC via Industrial Ethernet, eliminating manual entry errors and ensuring end-to-end chain integrity.</span></p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-3"><span data-lang="zh">视觉单元 (选项四)</span><span data-lang="en" class="hidden">Vision Unit (Option 4)</span></h4>
+                            <p class="text-base"><span data-lang="zh">构成自动化的“质量门”(Quality Gate)。不仅是读取，更是根据ISO/IEC 15415等标准对二维码质量进行“分级”，形成“打印-验证”的闭环控制，确保100%数据可读性。</span><span data-lang="en" class="hidden">This forms an automated "Quality Gate." It doesn't just read but "grades" the QR code quality based on standards like ISO/IEC 15415, creating a "print-verify" closed loop to ensure 100% readability.</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="financials" class="py-12 md:py-16">
+            <h2 class="text-3xl font-bold text-center mb-12"><span data-lang="zh">财务分析与投资回收期</span><span data-lang="en" class="hidden">Financial Analysis & Payback Period</span></h2>
+            <div class="max-w-5xl mx-auto bg-white rounded-lg card-shadow p-6 md:p-8">
+                <div class="chart-container">
+                    <canvas id="financialChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="implementation" class="py-12 md:py-16">
+            <h2 class="text-3xl font-bold text-center mb-12"><span data-lang="zh">实施策略与风险缓解</span><span data-lang="en" class="hidden">Implementation Strategy & Risk Mitigation</span></h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+                <div>
+                    <h3 class="text-2xl font-bold mb-6 text-[#1e3a8a]"><span data-lang="zh">实施计划 (FAT & SAT)</span><span data-lang="en" class="hidden">Implementation Plan (FAT & SAT)</span></h3>
+                    <div class="relative pl-8 border-l-2 border-[#1e3a8a] space-y-8">
+                        <div class="timeline-item"><h4 class="text-lg font-bold"><span data-lang="zh">第一阶段：合同与最终设计</span><span data-lang="en" class="hidden">Phase 1: Contract & Final Design</span></h4><p class="text-gray-600"><span data-lang="zh">根据所选方案组合签订合同。</span><span data-lang="en" class="hidden">Sign contracts based on the selected option combination.</span></p></div>
+                        <div class="timeline-item"><h4 class="text-lg font-bold"><span data-lang="zh">第二阶段：概念验证 (POC)</span><span data-lang="en" class="hidden">Phase 2: Proof of Concept (POC)</span></h4><p class="text-gray-600"><span data-lang="zh">若选择含堆叠单元的方案，此步关键。对泡沫真空夹具进行付费测试。</span><span data-lang="en" class="hidden">Crucial if the stacking unit is selected. Conduct paid tests on the foam vacuum gripper.</span></p></div>
+                        <div class="timeline-item"><h4 class="text-lg font-bold"><span data-lang="zh">第三阶段：制造与集成</span><span data-lang="en" class="hidden">Phase 3: Manufacturing & Integration</span></h4><p class="text-gray-600"><span data-lang="zh">并行制造所选模块的硬件。</span><span data-lang="en" class="hidden">Manufacture hardware for the selected modules in parallel.</span></p></div>
+                        <div class="timeline-item"><h4 class="text-lg font-bold"><span data-lang="zh">第四阶段：验收与培训</span><span data-lang="en" class="hidden">Phase 4: Acceptance & Training</span></h4><p class="text-gray-600"><span data-lang="zh">进行工厂验收(FAT)和现场验收(SAT)。</span><span data-lang="en" class="hidden">Conduct Factory Acceptance Test (FAT) and Site Acceptance Test (SAT).</span></p></div>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-lg card-shadow">
+                    <h3 class="text-2xl font-bold mb-6 text-[#1e3a8a]"><span data-lang="zh">风险缓解</span><span data-lang="en" class="hidden">Risk Mitigation</span></h3>
+                    <div class="space-y-4">
+                        <p><strong class="text-red-600"><span data-lang="zh">风险1 (人工读取错误):</span><span data-lang="en" class="hidden">Risk 1 (Manual Reading Error):</span></strong><span data-lang="zh"> 缓解策略：制定严格SOP，或升级至选项四。</span><span data-lang="en" class="hidden"> Mitigation: Implement strict SOPs or upgrade to Option 4.</span></p>
+                        <p><strong class="text-red-600"><span data-lang="zh">风险2 (抓取可靠性):</span><span data-lang="en" class="hidden">Risk 2 (Gripping Reliability):</span></strong><span data-lang="zh"> 缓解策略：强制执行第二阶段的POC研究。</span><span data-lang="en" class="hidden"> Mitigation: Mandate the Phase 2 POC study.</span></p>
+                        <p><strong class="text-red-600"><span data-lang="zh">风险3 (数据握手可靠性):</span><span data-lang="en" class="hidden">Risk 3 (Data Handshake Reliability):</span></strong><span data-lang="zh"> 缓解策略：在集成阶段进行详尽的通信协议测试。</span><span data-lang="en" class="hidden"> Mitigation: Conduct thorough communication protocol testing during integration.</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <div id="language-switcher" class="fixed bottom-4 right-4 z-50 bg-white rounded-full shadow-lg flex p-1 items-center border">
+        <button data-lang-target="en" class="lang-switch-btn px-3 py-1 text-sm md:px-4 md:py-2 md:text-base rounded-full transition-colors duration-300">EN</button>
+        <button data-lang-target="zh" class="lang-switch-btn px-3 py-1 text-sm md:px-4 md:py-2 md:text-base rounded-full transition-colors duration-300">中文</button>
+    </div>
+
+    <footer class="bg-white mt-16 border-t">
+        <div class="container mx-auto px-6 py-4 text-center text-gray-500 text-sm">
+            <p><span data-lang="zh">© 2025 皮革追溯与自动化集成系统技术与经济尽职调查报告</span><span data-lang="en" class="hidden">© 2025 Technical & Economic Due Diligence Report for Leather Traceability & Automation Integration System</span></p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const langButtons = document.querySelectorAll('.lang-switch-btn');
+            const translatableElements = document.querySelectorAll('[data-lang]');
+            const htmlEl = document.documentElement;
+            const ctx = document.getElementById('financialChart').getContext('2d');
+            
+            const translations = {
+                en: {
+                    chartTitle: 'Investment & Return Comparison by Option',
+                    dataset1Label: 'Total Investment (USD)',
+                    dataset2Label: 'Annual Labor Savings (USD)',
+                    labels: ['Option 1', 'Option 2', 'Option 3', 'Option 4']
+                },
+                zh: {
+                    chartTitle: '各方案投资与回报对比',
+                    dataset1Label: '总投资 (美元)',
+                    dataset2Label: '年化人工节约 (美元)',
+                    labels: ['选项一', '选项二', '选项三', '选项四']
+                }
+            };
+            
+            const financialData = {
+                labels: translations.zh.labels,
+                datasets: [{
+                    label: translations.zh.dataset1Label,
+                    data: [11600, 107600, 31600, 132600],
+                    backgroundColor: 'rgba(30, 58, 138, 0.7)',
+                    borderColor: 'rgba(30, 58, 138, 1)',
+                    borderWidth: 1
+                }, {
+                    label: translations.zh.dataset2Label,
+                    data: [0, 75000, 0, 75000],
+                    backgroundColor: 'rgba(5, 150, 105, 0.7)',
+                    borderColor: 'rgba(5, 150, 105, 1)',
+                    borderWidth: 1
+                }]
+            };
+
+            const financialChart = new Chart(ctx, {
+                type: 'bar',
+                data: financialData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: value => '$' + value.toLocaleString() } }
+                    },
+                    plugins: {
+                        title: { display: true, text: translations.zh.chartTitle, font: { size: 16 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const setLanguage = (lang) => {
+                htmlEl.setAttribute('lang', lang === 'zh' ? 'zh-CN' : 'en');
+                
+                translatableElements.forEach(el => {
+                    el.classList.toggle('hidden', el.dataset.lang !== lang);
+                });
+
+                langButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.langTarget === lang);
+                });
+                
+                // Update chart
+                financialChart.options.plugins.title.text = translations[lang].chartTitle;
+                financialChart.data.labels = translations[lang].labels;
+                financialChart.data.datasets[0].label = translations[lang].dataset1Label;
+                financialChart.data.datasets[1].label = translations[lang].dataset2Label;
+                financialChart.update();
+
+                localStorage.setItem('preferredLanguage', lang);
+            };
+
+            langButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    setLanguage(e.currentTarget.dataset.langTarget);
+                });
+            });
+
+            const preferredLanguage = localStorage.getItem('preferredLanguage');
+            const browserLanguage = navigator.language.startsWith('zh') ? 'zh' : 'en';
+            
+            setLanguage(preferredLanguage || browserLanguage);
+            
+            // Tab switching logic
+            const tabBtnTech = document.getElementById('tab-btn-tech');
+            const tabBtnModules = document.getElementById('tab-btn-modules');
+            const contentTech = document.getElementById('tab-content-tech');
+            const contentModules = document.getElementById('tab-content-modules');
+
+            tabBtnTech.addEventListener('click', () => {
+                tabBtnTech.classList.add('active');
+                tabBtnModules.classList.remove('active');
+                contentTech.classList.remove('hidden');
+                contentModules.classList.add('hidden');
+            });
+
+            tabBtnModules.addEventListener('click', () => {
+                tabBtnModules.classList.add('active');
+                tabBtnTech.classList.remove('active');
+                contentModules.classList.remove('hidden');
+                contentTech.classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
+```
+
+# 皮革件级追溯与自动化集成系统的技术与经济报告
+
+## 执行摘要
+
+本报告对“皮革件级追溯与自动化集成系统”方案进行了深入的技术可行性与经济合理性尽职调查。分析结论表明，该方案所提出的四种模块化选项，在技术上是可行的、前瞻的，其工程设计展现了高度的成熟度与专业性，能够有效应对皮革这种非均质（Inhomogeneous）天然材料带来的独特挑战。方案的成本结构在其所应用的工业级自动化技术范畴内，具备经济合理性与市场竞争力。
+
+**核心技术可行性结论：** 方案在核心技术选型上具备卓越的战略眼光。其一，针对皮革材料不平整的物理特性，创新性地设计了“自下而上”热压机械结构与“顺应性背托”（Compliant Backer）系统。这一组合设计并非简单的优化，而是确保在复杂曲面上达到高一致性压印效果的使能技术。其二，坚决采用数字打码（优选UV喷墨）替代传统的换版热压来生成可变二维码，这不仅是操作效率上的提升，更是符合工业4.0柔性制造与数据驱动理念的范式转移。其三，方案的模块化设计（自动上料、自动堆叠、自动视觉验证）为企业提供了一条清晰、灵活的自动化升级路径，允许资本根据战略优先级进行分阶段部署。
+
+**经济合理性结论：** 方案提供了明确的投资梯度。\*\*选项一（核心追溯）\*\*以$11,600美元的最低资本支出，解决了从无到有的追溯问题。**选项二（增加自动堆叠）**通过替代1.5个FTE（全职人力当量），实现了约1.4年的快速投资回收，论证了其卓越的经济价值。**选项三（增加自动上料）**则侧重于提升数据流的自动化与准确性。**选项四（全自动视觉集成方案）**作为终极形态，总投资为$132,600美元，实现了从进料到码垛的全流程无人化智能生产，其投资回收期约为1.8年，代表了长期效益的最大化。
+
+**最终建议：** 本报告强烈建议采纳此模块化方案。企业可根据当前最紧迫的生产痛点（建立追溯体系、解决人力瓶颈、或是提升数据准确性）选择相应的初始投资方案，并为未来的全面智能化升级保留清晰的路径。
+
+## 1. 核心技术深度解析：打标与追溯单元
+
+本单元是所有四个选项的基石，其设计的精妙之处在于深刻理解并解决了皮革材料的根本性挑战。
+
+### 1.1. 烫印模块：针对非均质材料的机电一体化解决方案
+
+**1.1.1. 核心挑战：皮革的非均质性与各向异性**
+
+皮革作为一种生物材料，其物理特性与均质的工程材料存在根本差异。其厚度、纤维密度和压缩弹性模量在不同区域存在显著的非均质性（Inhomogeneity）和各向异性（Anisotropy）。这导致传统的“自上而下”刚性压头无法在整个压印区域内施加均匀的压力（Pressure, P = F/A），从而造成压痕深度和清晰度的严重不一致。
+
+**1.1.2. 创新结构力学：自下而上压印与“顺应性背托”**
+
+本方案的“自下而上”结构，从根本上颠覆了传统的作用力与反作用力模型。
+
+* **作用力基准平面的反转：** 输送带下方的压印模块成为主动施力源，而上方的“顺应性背托”则成为一个智能的、可适应的反作用力基准平面。
+
+* **“顺应性背托” (Compliant Backer) 的关键角色：** 该背托由具有特定邵氏硬度的聚氨酯等弹性体制成。当自下而上的压印头顶着皮革上升时，这个柔性背托会根据皮革表面的局部高低起伏产生微小形变。它在较薄的区域下陷更多，在较厚的区域下陷较少，从而**动态地、被动地将反作用力均匀地重新分配到整个压印头上**。无论皮革局部厚度`t(x,y)`如何变化，压印头施加的总力`F_total`通过顺应性背托的自适应形变，被分解为在压印头表面各处近似恒定的压力分布 `P(x,y) ≈ F_total / A`，这确保了压痕深度的高度一致性。
+
+**1.1.3. 热力学与流体动力学精密控制**
+
+* **热力学控制 (Thermodynamics):** 压印模块内部集成高功率加热元件和K型热电偶，并通过**PID（比例-积分-微分）控制算法**对加热功率进行高频调节，确保压印头表面温度波动被严格控制在设定值的 **±2°C** 以内。
+
+* **流体动力学控制 (Fluid Dynamics):** 通过高精度的**电气比例阀**和**两位五通电磁阀**，对气缸的输出力（1-3 kN可调）和保压时间（Dwell Time）进行毫秒级精确控制，确保热量充分传递。
+
+### 1.2. 数字打码模块：数据载体应用的范式转移
+
+采用UV喷墨打印二维码，本质上是一个\*\*光聚合（Photopolymerization）\*\*过程。压电式喷头按需喷射含有光引发剂的UV墨水，紧随其后的高强度LED-UV灯（特定波长，如395nm）激发光引发剂，使墨水单体在毫秒内交联成固态聚合物。这种非接触式的打码方式，对皮革表面无任何机械应力，且固化后的标识具有优异的耐磨性和耐化学性。
+
+## 2. 模块化自动子系统分析
+
+### 2.1. 选项二 - 堆叠单元：笛卡尔机器人解决方案
+
+* **运动学分析 (Kinematics):** 堆叠任务本质上是一个笛卡尔坐标问题。与需要复杂逆向运动学计算的6轴关节臂机器人相比，龙门（笛卡尔）机器人的原生线性运动（X-Y-Z）对此更为高效，控制更简单，且在长行程上能保持更高的刚度和精度。
+
+* **末端执行器 (EOAT):** “泡沫真空夹具”是一种**顺应性表面真空末端执行器**。其核心优势在于，柔性的高密度泡沫能够有效贴合皮革表面的微观不平整性和宏观曲率，封闭材料本身的孔隙，从而在整个接触面上形成稳定、分布式的负压区。这解决了传统吸盘因漏气而失效的根本问题。
+
+### 2.2. 选项三 - 上料单元：上游数据集成
+
+此模块的核心是建立一条\*\*“数字线索”（Digital Thread）\*\*。通过工业级固定式扫描器（具备高首读率FPYR的解码算法），自动读取前段工序的条码，并通过工业以太网协议（如Profinet或EtherNet/IP）将数据传递给主PLC。这消除了人工录入的延迟和错误，确保了追溯链条从源头开始的完整性与准确性。
+
+### 2.3. 选项四 - 视觉单元：闭环验证
+
+此模块构成了一个**自动化的质量门（Quality Gate）**。它不仅仅是“读取”二维码，更是对其打印质量进行“分级”。通过采用2MP工业相机、远心镜头（以消除视差）和同轴漫射光源（以抑制UV油墨的反光），视觉系统能够根据**ISO/IEC 15415**等国际标准，对二维码的对比度、畸变、网格不均匀性等关键参数进行量化评分。只有评级合格（如Grade B或更高）的二维码才会被放行，从而形成一个“打印-验证”的闭环控制，确保100%的数据可读性。
+
+## 3. 技术规格与财务分析
+
+### 3.1. 技术规格与分项明细
+
+* **选项一：核心打标与追溯单元 ($11,600):** 包含自下而上气动压印模块、UV喷墨模块、人工读取工位、输送系统及主PLC控制系统。
+
+* **选项二：增加自动化堆叠单元 (总投资 $107,600):** 在选项一基础上，增加3轴龙门机器人系统、泡沫真空夹具及安全系统。
+
+* **选项三：增加自动上料系统 (总投资 $31,600):** 在选项一基础上，增加上料输送机和工业级固定式扫描器。
+
+* **选项四：全自动视觉集成方案 (总投资 $132,600):** 整合选项二和三的硬件，并用自动视觉读码模块（工业相机+视觉软件）替代人工读取。
+
+### 3.2. 经济尽职调查
+
+| 方案选项 | 总投资 (美元) | 年化人工节约 (美元) | 简单投资回收期 | 战略价值 | 
+ | ----- | ----- | ----- | ----- | ----- | 
+| **选项一** | \~$11,600 | \- | \- | 建立追溯基础 | 
+| **选项二** | \~$107,600 | $75,000 (1.5 FTEs) | **\~1.4 年** | 解决人力瓶颈 | 
+| **选项三** | \~$31,600 | \- | \- | 提升数据准确性 | 
+| **选项四** | \~$132,600 | $75,000 (1.5 FTEs) | **\~1.8 年** | 实现智能制造 | 
+
+## 4. 实施策略与风险缓解
+
+* **实施计划：**
+
+  1. **第一阶段（合同与最终设计）：** 根据所选方案组合签订合同。
+
+  2. **第二阶段（概念验证 - POC）：** 若选择含堆叠单元的方案，此步关键。对泡沫真空夹具进行付费测试，验证其在所有皮革类型上的技术成熟度等级（TRL）。
+
+  3. **第三阶段（制造与集成）：** 并行制造所选模块的硬件。
+
+  4. **第四阶段（FAT与SAT）：** 进行工厂验收测试和现场验收测试。
+
+* **风险缓解：**
+
+  * **风险1 (人工读取错误):** 缓解策略：制定严格SOP，或升级至选项四。
+
+  * **风险2 (抓取可靠性):** 缓解策略：强制执行第二阶段的POC研究，通过原型法进行风险规避。
+
+  * **风险3 (数据握手可靠性):** 缓解策略：在集成阶段进行详尽的通信协议和异常处理
